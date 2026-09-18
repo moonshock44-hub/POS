@@ -5,8 +5,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from routes import auth, products, sales, customers, kiosk, deliveries, despacho, settings, dashboard
@@ -161,6 +163,22 @@ async def health():
     except Exception as exc:  # noqa: BLE001
         return {"status": "degraded", "mongo": False, "error": str(exc)}
     return {"status": "ok", "mongo": mongo_ok, "service": "pos-tienditas"}
+
+
+# Serve the built frontend (app/frontend/dist) from this same FastAPI app so
+# the SPA and the API share one origin — no separate static host, no CORS.
+FRONTEND_DIST = BASE_DIR.parent / "frontend" / "dist"
+if FRONTEND_DIST.is_dir():
+    app.mount("/assets", StaticFiles(directory=FRONTEND_DIST / "assets"), name="assets")
+
+    @app.get("/{full_path:path}")
+    async def spa(full_path: str):
+        if full_path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="Not found")
+        candidate = FRONTEND_DIST / full_path
+        if full_path and candidate.is_file():
+            return FileResponse(candidate)
+        return FileResponse(FRONTEND_DIST / "index.html")
 
 
 if __name__ == "__main__":
