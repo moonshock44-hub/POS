@@ -1,13 +1,14 @@
-# Desplegar POS Tienditas en Fly.io
+# Desplegar POS Tienditas en Railway
 
-Arquitectura: un solo contenedor en Fly.io sirve la API (FastAPI) **y** el
-frontend ya compilado (mismo origen → sin problemas de CORS/cookies).
-La base de datos y las imágenes viven fuera de Fly, en servicios gratuitos
-administrados:
+Arquitectura: un solo servicio en Railway construye la imagen a partir del
+`Dockerfile` del repo y sirve la API (FastAPI) **y** el frontend ya
+compilado desde el mismo origen (sin problemas de CORS/cookies).
+La base de datos y las imágenes viven fuera de Railway, en servicios
+gratuitos administrados:
 
 | Pieza | Servicio | Por qué |
 |---|---|---|
-| App (API + UI) | Fly.io | Un solo `fly deploy`, HTTPS automático |
+| App (API + UI) | Railway | Deploy directo desde GitHub, detecta el `Dockerfile` solo, sin CLI |
 | Base de datos | MongoDB Atlas (M0, gratis) | Sin servidor que mantener, respaldable |
 | Imágenes de producto | Backblaze B2 (gratis hasta 10GB) | Compatible con S3 (boto3, sin tocar código) |
 
@@ -21,7 +22,7 @@ administrados:
 1. Crea una cuenta en https://www.mongodb.com/cloud/atlas/register
 2. Crea un cluster **M0 (Free)**.
 3. En **Database Access**, crea un usuario y contraseña.
-4. En **Network Access**, agrega `0.0.0.0/0` (Fly no tiene IP fija).
+4. En **Network Access**, agrega `0.0.0.0/0` (Railway no tiene IP fija).
 5. En **Connect → Drivers**, copia el connection string. Se ve así:
    `mongodb+srv://usuario:password@cluster0.xxxxx.mongodb.net/`
 
@@ -41,62 +42,59 @@ Ese string completo es tu `MONGO_URL`.
    - `S3_REGION` = la parte `us-west-004`
    - `S3_BUCKET` = el nombre que le pusiste
 
-## 3) Fly.io
+## 3) Railway
 
-Instala `flyctl`: https://fly.io/docs/flyctl/install/
+1. Crea una cuenta en https://railway.app (entra con GitHub — no pide
+   tarjeta para el trial de $5).
+2. **New Project → Deploy from GitHub repo** → elige el repo del proyecto.
+3. En **Settings → Source**, confirma que la rama a desplegar sea la que
+   tiene el código de la app (no necesariamente `main`).
+4. Railway detecta el `Dockerfile` y construye la imagen automáticamente
+   (no aceptes que te agregue Postgres/Redis — ya usamos Atlas).
+5. En **Settings → Networking**, click **Generate Domain**. Si te pide un
+   puerto objetivo (target port), pon **8000** (el que expone el
+   `Dockerfile`).
 
-```bash
-fly auth login
-cd POS
-fly launch --no-deploy   # detecta el Dockerfile; dile que NO cree Postgres/Redis
+### Variables de entorno
+
+En la pestaña **Variables** del servicio (Raw Editor o una por una):
+
 ```
-
-Cuando pregunte el nombre de la app, o edita `fly.toml` después con el nombre
-que te asigne. No aceptes que te cree una base de datos — ya tenemos Atlas.
-
-### Configura los secretos (nunca van en `fly.toml` ni en el chat)
-
-```bash
-fly secrets set `
-  MONGO_URL="mongodb+srv://usuario:password@cluster0.xxxxx.mongodb.net/" `
-  JWT_SECRET="pega-aqui-una-cadena-larga-aleatoria" `
-  SEED_ADMIN_PASSWORD="EligeUnaPasswordSegura!" `
-  S3_ACCESS_KEY="tu-keyID-de-B2" `
-  S3_SECRET_KEY="tu-applicationKey-de-B2" `
-  S3_ENDPOINT_URL="https://s3.us-west-004.backblazeb2.com" `
-  S3_PUBLIC_URL="https://s3.us-west-004.backblazeb2.com" `
-  S3_REGION="us-west-004" `
-  S3_BUCKET="pos-tienditas"
+MONGO_URL=mongodb+srv://usuario:password@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
+JWT_SECRET=pega-aqui-una-cadena-larga-aleatoria
+SEED_ADMIN_PASSWORD=EligeUnaPasswordSegura!
+COOKIE_SECURE=true
+DB_NAME=pos_tienditas
+CORS_ORIGINS=
+JWT_EXPIRE_MINUTES=720
+S3_ACCESS_KEY=tu-keyID-de-B2
+S3_SECRET_KEY=tu-applicationKey-de-B2
+S3_ENDPOINT_URL=https://s3.us-west-004.backblazeb2.com
+S3_PUBLIC_URL=https://s3.us-west-004.backblazeb2.com
+S3_REGION=us-west-004
+S3_BUCKET=pos-tienditas
+S3_PUBLIC_READ=true
 ```
-
-(En PowerShell el backtick ` al final de línea continúa el comando; en
-Mac/Linux usa `\` en su lugar.)
 
 Genera un `JWT_SECRET` fuerte con:
 ```bash
 python3 -c "import secrets; print(secrets.token_urlsafe(48))"
 ```
 
-### Despliega
+Al guardar las variables, Railway redespliega automáticamente. Si no lo
+hace, dispara un deploy manual desde el botón **Deploy**.
 
-```bash
-fly deploy
-```
-
-Al terminar, `fly status` te da la URL pública (algo como
-`https://pos-tienditas.fly.dev`). Entra ahí con `admin@tienditas.com` /
-la contraseña que pusiste en `SEED_ADMIN_PASSWORD`.
+Al terminar, la URL de **Settings → Networking** (algo como
+`https://xxxx.up.railway.app`) es tu POS en vivo. Entra ahí con
+`admin@tienditas.com` / la contraseña que pusiste en `SEED_ADMIN_PASSWORD`.
 
 ## Actualizar tras un cambio de código
 
-```bash
-git pull
-fly deploy
-```
+Con el repo conectado, Railway redespliega solo con cada `git push` a la
+rama configurada. No hace falta ningún comando adicional.
 
 ## Ver logs / diagnosticar
 
-```bash
-fly logs
-fly status
-```
+En el servicio → pestaña **Deployments** → abre el deployment más
+reciente → **Deploy Logs** (runtime) o **Build Logs** (construcción de la
+imagen).
