@@ -22,7 +22,7 @@ Default JWT TTL: **`JWT_EXPIRE_MINUTES=720`** (12h). See `app/backend/.env.examp
 | `GET` | `/api/auth/me` | session | Current user |
 | `POST` | `/api/auth/logout` | session | Clears cookie |
 | `GET` | `/api/auth/users` | **JWT admin** | List all users (Usuarios admin screen) |
-| `PATCH` | `/api/auth/users/{id}` | **JWT admin** | Body `{ role?, is_active? }`. Cannot self-demote or self-deactivate |
+| `PATCH` | `/api/auth/users/{id}` | **JWT admin** | Body `{ role?, is_active?, password? }` (any subset). Cannot self-demote or self-deactivate; self password change allowed |
 
 Login is by **username**, not email (no email field on `User` anymore). Username: 3-32 chars, lowercase letters/digits/`._-`, no spaces — normalized server-side.
 

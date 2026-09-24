@@ -3,7 +3,7 @@
  * rol o estado activo. Login es por username, no email.
  */
 import { useCallback, useEffect, useState } from 'react'
-import { UserCog, Plus, RefreshCw, AlertTriangle, ShieldAlert, Ban, CheckCircle2 } from 'lucide-react'
+import { UserCog, Plus, RefreshCw, AlertTriangle, ShieldAlert, Ban, CheckCircle2, KeyRound } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { usersApi } from '@/lib/api'
 import { Button } from '@/components/ui/button'
@@ -36,6 +36,8 @@ export default function Users() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [creating, setCreating] = useState(false)
   const [busyId, setBusyId] = useState(null)
+  const [pwDrafts, setPwDrafts] = useState({})
+  const [pwOkId, setPwOkId] = useState(null)
 
   const load = useCallback(async () => {
     if (!isAdmin) {
@@ -82,6 +84,26 @@ export default function Users() {
       setItems((prev) => prev.map((it) => (it.id === u.id ? updated : it)))
     } catch (err) {
       setError(err.message || 'No se pudo cambiar el rol')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  const onChangePassword = async (u) => {
+    const next = (pwDrafts[u.id] || '').trim()
+    if (next.length < 6) {
+      setError('La contraseña nueva debe tener al menos 6 caracteres')
+      return
+    }
+    setError('')
+    setPwOkId(null)
+    setBusyId(u.id)
+    try {
+      await usersApi.update(u.id, { password: next })
+      setPwDrafts((prev) => ({ ...prev, [u.id]: '' }))
+      setPwOkId(u.id)
+    } catch (err) {
+      setError(err.message || 'No se pudo cambiar la contraseña')
     } finally {
       setBusyId(null)
     }
@@ -263,6 +285,33 @@ export default function Users() {
                       </>
                     )}
                   </Button>
+                  <div className="flex gap-1.5 pt-1">
+                    <Input
+                      type="password"
+                      placeholder="Nueva contraseña"
+                      className="h-9 text-sm"
+                      value={pwDrafts[u.id] || ''}
+                      disabled={busyId === u.id}
+                      onChange={(e) => {
+                        setPwOkId(null)
+                        setPwDrafts((prev) => ({ ...prev, [u.id]: e.target.value }))
+                      }}
+                      aria-label={`Nueva contraseña para ${u.name}`}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={busyId === u.id || !(pwDrafts[u.id] || '').trim()}
+                      onClick={() => onChangePassword(u)}
+                    >
+                      <KeyRound className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                  {pwOkId === u.id && (
+                    <p className="text-xs font-bold bg-mint/40 rounded-lg px-2 py-1">
+                      Contraseña actualizada
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             )

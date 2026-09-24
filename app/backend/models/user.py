@@ -51,10 +51,11 @@ class UserLogin(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    """Admin-only partial update — role and/or active status."""
+    """Admin-only partial update — role, active status, and/or password reset."""
 
     role: Optional[Role] = None
     is_active: Optional[bool] = None
+    password: Optional[str] = Field(default=None, min_length=6)
 
 
 class UserPublic(BaseModel):

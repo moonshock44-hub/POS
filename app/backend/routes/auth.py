@@ -248,6 +248,9 @@ async def update_user(
                 status_code=400, detail="No puedes desactivarte ni quitarte el rol admin"
             )
 
+    if "password" in updates:
+        updates["hashed_password"] = hash_password(updates.pop("password"))
+
     updates["updated_at"] = datetime.now(timezone.utc)
     await db.users.update_one({"_id": oid}, {"$set": updates})
     target = await db.users.find_one({"_id": oid})
