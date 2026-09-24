@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Package, ShoppingCart, ArrowRight, Users, MonitorSmartphone, Settings, LayoutDashboard, History, PackageCheck } from 'lucide-react'
+import { Package, ShoppingCart, ArrowRight, Users, MonitorSmartphone, Settings, LayoutDashboard, History, PackageCheck, UserCog } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { authApi } from '@/lib/api'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -209,6 +209,30 @@ export default function Home() {
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-xl brutal-border brutal-shadow focus-brutal bg-coral px-5 text-sm font-bold transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
               >
                 Ir a ajustes
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </CardContent>
+          </Card>
+        )}
+
+        {user?.role === 'admin' && (
+          <Card className="bg-lavender/40 hover:-translate-y-0.5 transition-transform">
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <UserCog className="h-5 w-5" />
+                Usuarios
+              </CardTitle>
+              <CardDescription>Cuentas de cajeros, despacho y admins</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm font-medium text-ink/70 mb-4">
+                Crea usuarios con usuario + contraseña y asigna su rol.
+              </p>
+              <Link
+                to="/usuarios"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl brutal-border brutal-shadow focus-brutal bg-lavender px-5 text-sm font-bold transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+              >
+                Ir a usuarios
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </CardContent>

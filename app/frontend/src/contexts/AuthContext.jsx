@@ -30,8 +30,8 @@ export function AuthProvider({ children }) {
     }
   }, [refresh])
 
-  const login = useCallback(async (email, password) => {
-    const data = await authApi.login(email, password)
+  const login = useCallback(async (username, password) => {
+    const data = await authApi.login(username, password)
     // Ignore access_token if BE still returns it — cookie carries session
     if (data?.user) {
       setUser(data.user)

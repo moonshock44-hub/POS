@@ -40,7 +40,7 @@ def load_settings() -> dict:
         "RATE_LIMIT_REGISTER_PER_MIN": int(os.getenv("RATE_LIMIT_REGISTER_PER_MIN", "3")),
         "RATE_LIMIT_SETTINGS_WRITE_PER_MIN": int(os.getenv("RATE_LIMIT_SETTINGS_WRITE_PER_MIN", "10")),
         "RATE_LIMIT_UPLOAD_PER_MIN": int(os.getenv("RATE_LIMIT_UPLOAD_PER_MIN", "10")),
-        "SEED_ADMIN_EMAIL": os.getenv("SEED_ADMIN_EMAIL", "admin@tienditas.com"),
+        "SEED_ADMIN_USERNAME": os.getenv("SEED_ADMIN_USERNAME", "admin"),
         "SEED_ADMIN_PASSWORD": os.getenv("SEED_ADMIN_PASSWORD", "Admin123!"),
         "SEED_ADMIN_NAME": os.getenv("SEED_ADMIN_NAME", "Administrador"),
         # Object storage (MinIO / S3-compatible) — never store Base64 images in Mongo
@@ -73,14 +73,24 @@ def _warn_insecure_settings(settings: dict) -> None:
         )
 
 async def seed_admin(db, settings: dict) -> None:
-    email = settings["SEED_ADMIN_EMAIL"].lower()
-    existing = await db.users.find_one({"email": email})
+    username = settings["SEED_ADMIN_USERNAME"].strip().lower()
+    existing = await db.users.find_one({"username": username})
     if existing:
+        return
+    # Migrate a pre-username admin doc in place (keeps its existing password
+    # working) instead of creating a second, unreachable admin account.
+    legacy = await db.users.find_one({"role": "admin", "username": {"$exists": False}})
+    if legacy:
+        await db.users.update_one(
+            {"_id": legacy["_id"]},
+            {"$set": {"username": username, "updated_at": datetime.now(timezone.utc)}},
+        )
+        print(f"[seed] Admin existente migrado a username: {username}")
         return
     now = datetime.now(timezone.utc)
     await db.users.insert_one(
         {
-            "email": email,
+            "username": username,
             "name": settings["SEED_ADMIN_NAME"],
             "hashed_password": hash_password(settings["SEED_ADMIN_PASSWORD"]),
             "role": "admin",
@@ -89,7 +99,7 @@ async def seed_admin(db, settings: dict) -> None:
             "updated_at": now,
         }
     )
-    print(f"[seed] Admin creado: {email}")
+    print(f"[seed] Admin creado: {username}")
 
 
 @asynccontextmanager
@@ -102,7 +112,7 @@ async def lifespan(app: FastAPI):
     app.state.db = db
     # ping
     await client.admin.command("ping")
-    await db.users.create_index("email", unique=True)
+    await db.users.create_index("username", unique=True, sparse=True)
     await db.products.create_index("sku", unique=True)
     await db.products.create_index("active")
     await db.sales.create_index("created_at")

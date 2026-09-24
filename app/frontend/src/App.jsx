@@ -13,6 +13,7 @@ import KioskOrders from '@/pages/KioskOrders'
 import Kiosk from '@/pages/Kiosk'
 import Deliveries from '@/pages/Deliveries'
 import Settings from '@/pages/Settings'
+import Users from '@/pages/Users'
 import Dashboard from '@/pages/Dashboard'
 import SalesHistory from '@/pages/SalesHistory'
 import Dispatch from '@/pages/Dispatch'
@@ -151,6 +152,14 @@ export default function App() {
               element={
                 <DespachoOnlyGuard>
                   <Settings />
+                </DespachoOnlyGuard>
+              }
+            />
+            <Route
+              path="/usuarios"
+              element={
+                <DespachoOnlyGuard>
+                  <Users />
                 </DespachoOnlyGuard>
               }
             />

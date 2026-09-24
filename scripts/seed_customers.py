@@ -10,7 +10,7 @@ import urllib.error
 import urllib.request
 
 API = os.environ.get("API", "http://127.0.0.1:8000")
-EMAIL = os.environ.get("SEED_ADMIN_EMAIL", "admin@tienditas.com")
+USERNAME = os.environ.get("SEED_ADMIN_USERNAME", "admin")
 PASSWORD = os.environ.get("SEED_ADMIN_PASSWORD", "Admin123!")
 
 CUSTOMERS = [
@@ -53,7 +53,7 @@ def req(method: str, path: str, body: dict | None = None, opener=None):
 def main() -> int:
     jar = http.cookiejar.CookieJar()
     opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
-    login = req("POST", "/api/auth/login", body={"email": EMAIL, "password": PASSWORD}, opener=opener)
+    login = req("POST", "/api/auth/login", body={"username": USERNAME, "password": PASSWORD}, opener=opener)
     assert login.get("user", {}).get("role") == "admin"
     existing = req("GET", "/api/customers?active=false", opener=opener)
     phones = {c["phone"] for c in existing}

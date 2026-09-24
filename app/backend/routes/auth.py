@@ -3,10 +3,11 @@ from datetime import datetime, timezone
 from typing import Annotated, Optional
 
 from bson import ObjectId
+from bson.errors import InvalidId
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from models.user import TokenResponse, UserCreate, UserLogin, UserPublic
+from models.user import TokenResponse, UserCreate, UserLogin, UserPublic, UserUpdate
 from utils.rate_limit import enforce_rate_limit
 from utils.security import (
     create_access_token,
@@ -153,13 +154,13 @@ async def register(
     if body.role not in ("admin", "cajero", "despacho"):
         raise HTTPException(status_code=400, detail="Rol inválido (admin|cajero|despacho)")
 
-    existing = await db.users.find_one({"email": body.email.lower()})
+    existing = await db.users.find_one({"username": body.username})
     if existing:
-        raise HTTPException(status_code=400, detail="El email ya está registrado")
+        raise HTTPException(status_code=400, detail="El usuario ya está registrado")
 
     now = datetime.now(timezone.utc)
     doc = {
-        "email": body.email.lower(),
+        "username": body.username,
         "name": body.name.strip(),
         "hashed_password": hash_password(body.password),
         "role": body.role,
@@ -185,9 +186,9 @@ async def login(body: UserLogin, request: Request, response: Response):
     )
     db = get_db(request)
 
-    user = await db.users.find_one({"email": body.email.lower()})
+    user = await db.users.find_one({"username": body.username})
     if not user or not verify_password(body.password, user["hashed_password"]):
-        raise HTTPException(status_code=401, detail="Email o contraseña incorrectos")
+        raise HTTPException(status_code=401, detail="Usuario o contraseña incorrectos")
     if not user.get("is_active", True):
         raise HTTPException(status_code=401, detail="Usuario desactivado")
 
@@ -196,7 +197,7 @@ async def login(body: UserLogin, request: Request, response: Response):
         settings["JWT_SECRET"],
         settings["JWT_ALGORITHM"],
         settings["JWT_EXPIRE_MINUTES"],
-        extra={"role": user["role"], "email": user["email"]},
+        extra={"role": user["role"], "username": user["username"]},
     )
     _set_auth_cookie(response, token, settings)
     # Cookie HttpOnly is the session — do not return JWT in body for web clients.
@@ -207,6 +208,50 @@ async def login(body: UserLogin, request: Request, response: Response):
 @router.get("/me", response_model=UserPublic)
 async def me(user=Depends(get_current_user)):
     return UserPublic.from_doc(user)
+
+
+@router.get("/users", response_model=list[UserPublic])
+async def list_users(request: Request, _admin=Depends(require_admin)):
+    """Admin-only — for the Usuarios management screen."""
+    db = get_db(request)
+    docs = await db.users.find().sort("created_at", 1).to_list(500)
+    return [UserPublic.from_doc(d) for d in docs]
+
+
+@router.patch("/users/{user_id}", response_model=UserPublic)
+async def update_user(
+    user_id: str,
+    body: UserUpdate,
+    request: Request,
+    admin=Depends(require_admin),
+):
+    """Admin-only — change role and/or active status. Cannot self-demote/deactivate."""
+    try:
+        oid = ObjectId(user_id)
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Id inválido")
+
+    db = get_db(request)
+    target = await db.users.find_one({"_id": oid})
+    if not target:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    updates = body.model_dump(exclude_unset=True)
+    if not updates:
+        return UserPublic.from_doc(target)
+
+    if str(target["_id"]) == str(admin["_id"]):
+        if updates.get("is_active") is False or (
+            "role" in updates and updates["role"] != "admin"
+        ):
+            raise HTTPException(
+                status_code=400, detail="No puedes desactivarte ni quitarte el rol admin"
+            )
+
+    updates["updated_at"] = datetime.now(timezone.utc)
+    await db.users.update_one({"_id": oid}, {"$set": updates})
+    target = await db.users.find_one({"_id": oid})
+    return UserPublic.from_doc(target)
 
 
 @router.post("/logout")

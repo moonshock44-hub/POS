@@ -17,12 +17,16 @@ Default JWT TTL: **`JWT_EXPIRE_MINUTES=720`** (12h). See `app/backend/.env.examp
 
 | Method | Path | Auth | Notes |
 |--------|------|------|-------|
-| `POST` | `/api/auth/login` | public | Sets HttpOnly cookie; body = `{ user }` (**no** `access_token`). Rate-limit ~**5/min/IP** → **429** |
-| `POST` | `/api/auth/register` | **JWT admin** | Creates `admin`\|`cajero`\|`despacho`; body = `{ user }` only; does not steal admin cookie. Rate-limit ~**3/min/IP** → **429**. Non-admin → **403** |
+| `POST` | `/api/auth/login` | public | Body `{ username, password }`. Sets HttpOnly cookie; response = `{ user }` (**no** `access_token`). Rate-limit ~**5/min/IP** → **429** |
+| `POST` | `/api/auth/register` | **JWT admin** | Body `{ username, password, name, role }`. Creates `admin`\|`cajero`\|`despacho`; response = `{ user }` only; does not steal admin cookie. Rate-limit ~**3/min/IP** → **429**. Non-admin → **403** |
 | `GET` | `/api/auth/me` | session | Current user |
 | `POST` | `/api/auth/logout` | session | Clears cookie |
+| `GET` | `/api/auth/users` | **JWT admin** | List all users (Usuarios admin screen) |
+| `PATCH` | `/api/auth/users/{id}` | **JWT admin** | Body `{ role?, is_active? }`. Cannot self-demote or self-deactivate |
 
-Seed admin still boots from env (`SEED_ADMIN_*`) on startup.
+Login is by **username**, not email (no email field on `User` anymore). Username: 3-32 chars, lowercase letters/digits/`._-`, no spaces — normalized server-side.
+
+Seed admin still boots from env (`SEED_ADMIN_USERNAME` default `admin`, `SEED_ADMIN_PASSWORD`) on startup.
 
 Smoke scripts: use curl cookie jars (`-c`/`-b`) after login. Do not expect `access_token` in JSON.
 
@@ -36,7 +40,7 @@ Smoke scripts: use curl cookie jars (`-c`/`-b`) after login. Do not expect `acce
 | `GET`/`PATCH` `/api/despacho` (F10) | **403** | yes | yes |
 | `GET /api/settings` | yes | yes | **403** |
 | `PUT`/`PATCH /api/settings` | **403** | yes (rate-limited) | **403** |
-| `POST /api/auth/register` | **403** | yes | **403** |
+| `POST /api/auth/register`, `GET`/`PATCH /api/auth/users` | **403** | yes | **403** |
 | `GET /api/auth/me`, `POST /api/auth/logout` | yes | yes | yes |
 
 Public (no auth): `POST /api/kiosk/orders`, `GET /api/kiosk/products` (no `cost`).
@@ -164,7 +168,7 @@ Exceeded → **429** `{ "detail": "Demasiados intentos..." }`.
 ```bash
 TOKEN=$(curl -sf -X POST http://127.0.0.1:8000/api/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"email":"admin@tienditas.com","password":"Admin123!"}' \
+  -d '{"username":"admin","password":"Admin123!"}' \
   | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
 
 # Upload
@@ -282,7 +286,7 @@ Per line, stock is decremented with `findOneAndUpdate` conditioned on `active=tr
 ```bash
 TOKEN=$(curl -sf -X POST http://127.0.0.1:8000/api/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"email":"admin@tienditas.com","password":"Admin123!"}' \
+  -d '{"username":"admin","password":"Admin123!"}' \
   | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
 
 # Assume PRODUCT_ID from a prior create
@@ -427,7 +431,7 @@ No multi-doc transactions. Patterns:
 ```bash
 TOKEN=$(curl -sf -X POST http://127.0.0.1:8000/api/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"email":"admin@tienditas.com","password":"Admin123!"}' \
+  -d '{"username":"admin","password":"Admin123!"}' \
   | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
 
 # Create customer
@@ -595,7 +599,7 @@ Same payment / stock / CxC rules as `POST /api/sales` (shared helper). Uses snap
 # Public create (no token)
 curl -sf -X POST http://127.0.0.1:8000/api/kiosk/orders   -H 'Content-Type: application/json'   -d '{"lines":[{"product_id":"PRODUCT_ID","qty":2}],"customer_name":"María","note":null}'
 
-TOKEN=$(curl -sf -X POST http://127.0.0.1:8000/api/auth/login   -H 'Content-Type: application/json'   -d '{"email":"admin@tienditas.com","password":"Admin123!"}'   | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+TOKEN=$(curl -sf -X POST http://127.0.0.1:8000/api/auth/login   -H 'Content-Type: application/json'   -d '{"username":"admin","password":"Admin123!"}'   | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
 
 curl -sf http://127.0.0.1:8000/api/kiosk/orders/pending/count -H "Authorization: Bearer $TOKEN"
 curl -sf "http://127.0.0.1:8000/api/kiosk/orders?status=pending" -H "Authorization: Bearer $TOKEN"
@@ -711,7 +715,7 @@ curl -sf 'http://127.0.0.1:8000/api/sales?delivery_status=assigned' -H "Authoriz
 ```bash
 TOKEN=$(curl -sf -X POST http://127.0.0.1:8000/api/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"email":"admin@tienditas.com","password":"Admin123!"}' \
+  -d '{"username":"admin","password":"Admin123!"}' \
   | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
 
 curl -sf -X POST http://127.0.0.1:8000/api/deliveries \
@@ -810,7 +814,7 @@ Singleton Mongo collection `settings` (one document). `id` is PyObjectId → **s
 ```bash
 TOKEN=$(curl -sf -X POST http://127.0.0.1:8000/api/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"email":"admin@tienditas.com","password":"Admin123!"}' \
+  -d '{"username":"admin","password":"Admin123!"}' \
   | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
 
 curl -sf http://127.0.0.1:8000/api/settings -H "Authorization: Bearer $TOKEN"
@@ -922,7 +926,7 @@ Returns one `SalePublic`. Unknown / invalid id → `404` (`Venta no encontrada`)
 ```bash
 TOKEN=$(curl -sf -X POST http://127.0.0.1:8000/api/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"email":"admin@tienditas.com","password":"Admin123!"}' \
+  -d '{"username":"admin","password":"Admin123!"}' \
   | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
 
 # Historial list — CDMX day range + payment filters

@@ -77,13 +77,26 @@ export async function uploadFile(path, file, { fieldName = 'file', auth = true }
 }
 
 export const authApi = {
-  login: (email, password) =>
-    api('/api/auth/login', { method: 'POST', body: { email, password }, auth: false }),
+  login: (username, password) =>
+    api('/api/auth/login', { method: 'POST', body: { username, password }, auth: false }),
   register: (payload) =>
     api('/api/auth/register', { method: 'POST', body: payload, auth: true }),
   me: () => api('/api/auth/me'),
   logout: () => api('/api/auth/logout', { method: 'POST' }),
   health: () => api('/api/health', { auth: false }),
+}
+
+/*
+ * Usuarios (admin-only) — login is by username, not email.
+ * User: { id, username, name, role, is_active, created_at }
+ * GET  /api/auth/users — admin only, all users
+ * POST /api/auth/register — admin only — create { username, password, name, role }
+ * PATCH /api/auth/users/{id} — admin only — { role?, is_active? }, cannot self-demote/deactivate
+ */
+export const usersApi = {
+  list: () => api('/api/auth/users'),
+  create: (payload) => api('/api/auth/register', { method: 'POST', body: payload }),
+  update: (id, payload) => api(`/api/auth/users/${id}`, { method: 'PATCH', body: payload }),
 }
 
 /*

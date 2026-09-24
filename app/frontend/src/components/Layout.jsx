@@ -12,6 +12,7 @@ import {
   Store,
   TabletSmartphone,
   Truck,
+  UserCog,
   Users,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -124,7 +125,7 @@ export default function Layout() {
                   )}
                   <div className="hidden md:block text-right max-w-[10rem]">
                     <div className="text-sm font-bold truncate">{user.name}</div>
-                    <div className="text-xs text-ink/60 truncate">{user.email}</div>
+                    <div className="text-xs text-ink/60 truncate">@{user.username}</div>
                   </div>
                   <Badge className={roleBadgeClass(user.role)}>{user.role}</Badge>
                   <Button variant="outline" size="sm" onClick={onLogout} aria-label="Cerrar sesión">
@@ -179,6 +180,18 @@ export default function Layout() {
                     <PackageCheck className="h-4 w-4 shrink-0" aria-hidden />
                     <span className="md:hidden">Desp.</span>
                     <span className="hidden md:inline">Despacho</span>
+                  </NavLink>
+                )}
+                {user?.role === 'admin' && (
+                  <NavLink
+                    to="/usuarios"
+                    title="Usuarios"
+                    className={(args) =>
+                      cn(navClass(args), args.isActive ? 'bg-lavender' : undefined)
+                    }
+                  >
+                    <UserCog className="h-4 w-4 shrink-0" aria-hidden />
+                    <span>Usuarios</span>
                   </NavLink>
                 )}
                 {user?.role === 'admin' && (

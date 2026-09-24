@@ -43,7 +43,7 @@ npm run dev
 
 | Campo | Valor |
 |-------|--------|
-| Email | `admin@tienditas.com` |
+| Usuario | `admin` |
 | Password | `Admin123!` |
 | Rol | `admin` |
 
