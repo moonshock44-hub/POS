@@ -6,6 +6,16 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import ProductImage from '@/components/ProductImage'
 
+const UNIT_OPTIONS = [
+  { value: 'pza', label: 'Piezas' },
+  { value: 'kg', label: 'Kilogramos' },
+  { value: 'g', label: 'Gramos' },
+  { value: 'lt', label: 'Litros' },
+  { value: 'ml', label: 'Mililitros' },
+  { value: 'caja', label: 'Caja' },
+  { value: 'paquete', label: 'Paquete' },
+]
+
 const EMPTY = {
   name: '',
   sku: '',
@@ -177,12 +187,21 @@ export default function ProductDialog({ open, product, onClose, onSaved }) {
             </div>
             <div className="space-y-2">
               <Label htmlFor="prod-unit">Unidad</Label>
-              <Input
+              <select
                 id="prod-unit"
                 value={form.unit}
                 onChange={setField('unit')}
-                placeholder="pza"
-              />
+                className="flex h-11 w-full rounded-xl brutal-border bg-white px-3 text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-lavender focus-visible:ring-offset-2 focus-visible:ring-offset-cream"
+              >
+                {UNIT_OPTIONS.map((u) => (
+                  <option key={u.value} value={u.value}>
+                    {u.label}
+                  </option>
+                ))}
+                {form.unit && !UNIT_OPTIONS.some((u) => u.value === form.unit) && (
+                  <option value={form.unit}>{form.unit}</option>
+                )}
+              </select>
             </div>
           </div>
 
