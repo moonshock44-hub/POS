@@ -29,27 +29,29 @@ export default function Home() {
 
       <div className="grid gap-4 md:grid-cols-3">
 
-        <Card className="bg-sky/40 hover:-translate-y-0.5 transition-transform">
-          <CardHeader>
-            <CardTitle className="text-xl flex items-center gap-2">
-              <LayoutDashboard className="h-5 w-5" />
-              Dashboard
-            </CardTitle>
-            <CardDescription>KPIs, gráficas e inventario bajo</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm font-medium text-ink/70 mb-4">
-              Ventas de hoy y del mes, CxC, métodos de pago, top productos y stock bajo.
-            </p>
-            <Link
-              to="/dashboard"
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl brutal-border brutal-shadow focus-brutal bg-sky px-5 text-sm font-bold transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
-            >
-              Ir al dashboard
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </CardContent>
-        </Card>
+        {user?.role === 'admin' && (
+          <Card className="bg-sky/40 hover:-translate-y-0.5 transition-transform">
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <LayoutDashboard className="h-5 w-5" />
+                Dashboard
+              </CardTitle>
+              <CardDescription>KPIs, gráficas e inventario bajo</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm font-medium text-ink/70 mb-4">
+                Ventas de hoy y del mes, CxC, métodos de pago, top productos y stock bajo.
+              </p>
+              <Link
+                to="/dashboard"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl brutal-border brutal-shadow focus-brutal bg-sky px-5 text-sm font-bold transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+              >
+                Ir al dashboard
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="bg-blush/40 hover:-translate-y-0.5 transition-transform">
           <CardHeader>

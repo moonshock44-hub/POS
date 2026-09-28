@@ -10,6 +10,7 @@ import {
   Trash2,
   Banknote,
   CreditCard,
+  Landmark,
 } from 'lucide-react'
 import { productsApi, salesApi } from '@/lib/api'
 import { Button } from '@/components/ui/button'
@@ -451,7 +452,7 @@ const openQty = (product, initialQuantity, cartProductId = null) => {
 
               <div className="space-y-2 pt-1">
                 <Label>Método de pago</Label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   <Button
                     type="button"
                     variant={paymentMethod === 'cash' ? 'lemon' : 'outline'}
@@ -469,6 +470,15 @@ const openQty = (product, initialQuantity, cartProductId = null) => {
                   >
                     <CreditCard className="h-4 w-4" />
                     Tarjeta
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={paymentMethod === 'transfer' ? 'sky' : 'outline'}
+                    size="sm"
+                    onClick={() => setPaymentMethod('transfer')}
+                  >
+                    <Landmark className="h-4 w-4" />
+                    Transf.
                   </Button>
                 </div>
               </div>

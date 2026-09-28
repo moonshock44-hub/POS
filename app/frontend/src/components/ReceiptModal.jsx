@@ -63,6 +63,7 @@ function paymentMethodLabel(method) {
   const m = String(method || '').toLowerCase()
   if (m === 'cash' || m === 'efectivo') return 'Efectivo'
   if (m === 'card' || m === 'tarjeta') return 'Tarjeta'
+  if (m === 'transfer' || m === 'transferencia') return 'Transferencia'
   return method || '—'
 }
 
@@ -192,11 +193,30 @@ export default function ReceiptModal({ open, onClose, sale }) {
     <style>{`@media print {
   body * { visibility: hidden !important; }
   #receipt-print-area, #receipt-print-area * { visibility: visible !important; }
+  /* The rest of the app (hidden but still in normal flow) can be taller than
+     one printed page, which would paginate the fixed ticket onto extra pages
+     (fixed elements repeat per print page). Collapse it so print is 1 page. */
+  #root { height: 0 !important; overflow: hidden !important; }
+  /* The overlay + panel clip/position their content (fixed/relative, max-height,
+     overflow) — reset both so the fixed print area below isn't cut off. Only
+     .receipt-modal-chrome (the header, backdrop, WhatsApp box, action buttons)
+     actually gets hidden; the overlay/panel wrap the print area itself, so they
+     must stay rendered (display: none on an ancestor hides descendants too). */
+  .receipt-modal-overlay {
+    position: static !important;
+    display: block !important;
+  }
+  .receipt-modal-panel {
+    position: static !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
   #receipt-print-area {
-    position: absolute !important;
+    position: fixed !important;
     left: 0 !important;
     top: 0 !important;
     width: 100% !important;
+    max-height: none !important;
     margin: 0 !important;
     padding: 12px !important;
     border: none !important;
@@ -205,9 +225,10 @@ export default function ReceiptModal({ open, onClose, sale }) {
     background: white !important;
   }
   .receipt-modal-chrome { display: none !important; }
+  body { background: white !important; }
 }`}</style>
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 receipt-modal-chrome"
+      className="receipt-modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
@@ -218,7 +239,7 @@ export default function ReceiptModal({ open, onClose, sale }) {
         aria-label="Cerrar"
         onClick={onClose}
       />
-      <div className="relative z-10 w-full max-w-md max-h-[92vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl brutal-border brutal-shadow-lg bg-cream">
+      <div className="receipt-modal-panel relative z-10 w-full max-w-md max-h-[92vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl brutal-border brutal-shadow-lg bg-cream">
         <div className="sticky top-0 flex items-center justify-between gap-3 border-b-[3px] border-ink bg-cream px-5 py-4 receipt-modal-chrome">
           <h2 id={titleId} className="font-display text-xl">
             Ticket de venta

@@ -1,5 +1,5 @@
 import { useEffect, useId, useState } from 'react'
-import { X, Banknote, CreditCard } from 'lucide-react'
+import { X, Banknote, CreditCard, Landmark } from 'lucide-react'
 import { customersApi } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -136,7 +136,7 @@ export default function PaymentDialog({
 
           <div className="space-y-2">
             <Label>Método</Label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => setMethod('cash')}
@@ -160,6 +160,18 @@ export default function PaymentDialog({
               >
                 <CreditCard className="h-4 w-4" />
                 Tarjeta
+              </button>
+              <button
+                type="button"
+                onClick={() => setMethod('transfer')}
+                className={`inline-flex h-11 items-center justify-center gap-2 rounded-xl brutal-border text-sm font-bold transition-all ${
+                  method === 'transfer'
+                    ? 'bg-lavender brutal-shadow'
+                    : 'bg-white/70 hover:bg-white'
+                }`}
+              >
+                <Landmark className="h-4 w-4" />
+                Transf.
               </button>
             </div>
           </div>

@@ -4,6 +4,7 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from models.base import PaymentMethod
 from models.sale import SalePublic
 
 
@@ -75,7 +76,7 @@ class KioskPendingCount(BaseModel):
 
 
 class KioskFulfillBody(BaseModel):
-    payment_method: Literal["cash", "card"]
+    payment_method: PaymentMethod
     amount_paid: float = Field(ge=0)
     customer_id: Optional[str] = None
 

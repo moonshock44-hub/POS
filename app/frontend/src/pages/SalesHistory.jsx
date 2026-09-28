@@ -69,6 +69,7 @@ function paymentMethodLabel(method) {
   const m = String(method || '').toLowerCase()
   if (m === 'cash' || m === 'efectivo') return 'Efectivo'
   if (m === 'card' || m === 'tarjeta') return 'Tarjeta'
+  if (m === 'transfer' || m === 'transferencia') return 'Transferencia'
   return method || '—'
 }
 
@@ -478,6 +479,7 @@ export default function SalesHistory() {
                   <option value="">Todos</option>
                   <option value="cash">Efectivo</option>
                   <option value="card">Tarjeta</option>
+                  <option value="transfer">Transferencia</option>
                 </select>
               </div>
               <div className="space-y-1.5">

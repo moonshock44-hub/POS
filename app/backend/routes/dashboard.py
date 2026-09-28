@@ -21,7 +21,7 @@ from models.dashboard import (
     SalesBlock,
     SalesBucket,
 )
-from routes.auth import get_current_user, get_db
+from routes.auth import get_db, require_admin
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -105,7 +105,7 @@ async def _payment_methods(db, start: datetime, end: datetime) -> list[PaymentMe
     rows = await db.sales.aggregate(pipeline).to_list(length=20)
     by_m = {r.get("_id"): r for r in rows}
     out: list[PaymentMethodStat] = []
-    for method in ("cash", "card"):
+    for method in ("cash", "card", "transfer"):
         r = by_m.get(method) or {}
         out.append(
             PaymentMethodStat(
@@ -253,7 +253,7 @@ async def _cxc(db) -> CxcBlock:
 @router.get("/summary", response_model=DashboardSummary)
 async def dashboard_summary(
     request: Request,
-    _user=Depends(get_current_user),
+    _user=Depends(require_admin),
     from_: Optional[str] = Query(default=None, alias="from"),
     to: Optional[str] = Query(default=None),
     threshold: float = Query(default=DEFAULT_THRESHOLD, ge=0),

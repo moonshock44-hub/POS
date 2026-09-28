@@ -3,6 +3,8 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from .base import PaymentMethod
+
 
 class SalesBucket(BaseModel):
     count: int = 0
@@ -12,7 +14,7 @@ class SalesBucket(BaseModel):
 
 
 class PaymentMethodStat(BaseModel):
-    method: Literal["cash", "card"]
+    method: PaymentMethod
     count: int = 0
     gross_total: float = 0.0
     amount_paid_total: float = 0.0

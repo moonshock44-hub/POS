@@ -17,7 +17,7 @@
  * amount_paid defaults to total; CustomerPicker only when partial/crédito.
  */
 import { useEffect, useState } from 'react'
-import { AlertTriangle, Banknote, CreditCard } from 'lucide-react'
+import { AlertTriangle, Banknote, CreditCard, Landmark } from 'lucide-react'
 import { kioskApi } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -169,7 +169,7 @@ export default function KioskCheckout({
 
         <div className="space-y-2">
           <Label>Método de pago</Label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <Button
               type="button"
               variant={method === 'cash' ? 'lemon' : 'outline'}
@@ -191,6 +191,17 @@ export default function KioskCheckout({
             >
               <CreditCard className="h-5 w-5" />
               Tarjeta
+            </Button>
+            <Button
+              type="button"
+              variant={method === 'transfer' ? 'sky' : 'outline'}
+              size="lg"
+              className="h-14 text-base"
+              onClick={() => setMethod('transfer')}
+              disabled={submitting || disabled}
+            >
+              <Landmark className="h-5 w-5" />
+              Transf.
             </Button>
           </div>
         </div>

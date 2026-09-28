@@ -75,6 +75,7 @@ function methodLabel(method) {
   const m = String(method || '').toLowerCase()
   if (m === 'cash' || m === 'efectivo') return 'Efectivo'
   if (m === 'card' || m === 'tarjeta') return 'Tarjeta'
+  if (m === 'transfer' || m === 'transferencia') return 'Transferencia'
   return method || '—'
 }
 

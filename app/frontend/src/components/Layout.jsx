@@ -32,7 +32,6 @@ const navClass = ({ isActive }) =>
   )
 
 const NAV = [
-  { to: '/dashboard', label: 'Dashboard', short: 'Dash', icon: LayoutDashboard, active: 'bg-lemon' },
   { to: '/pos', label: 'POS', short: 'POS', icon: ShoppingCart, active: 'bg-blush' },
   { to: '/inventario', label: 'Inventario', short: 'Stock', icon: Package, active: 'bg-mint' },
   { to: '/entregas', label: 'Entregas', short: 'Entrega', icon: Truck, active: 'bg-sky' },
@@ -155,6 +154,19 @@ export default function Layout() {
               </NavLink>
             ) : (
               <>
+                {user?.role === 'admin' && (
+                  <NavLink
+                    to="/dashboard"
+                    title="Dashboard"
+                    className={(args) =>
+                      cn(navClass(args), args.isActive ? 'bg-lemon' : undefined)
+                    }
+                  >
+                    <LayoutDashboard className="h-4 w-4 shrink-0" aria-hidden />
+                    <span className="md:hidden">Dash</span>
+                    <span className="hidden md:inline">Dashboard</span>
+                  </NavLink>
+                )}
                 {NAV.map(({ to, label, short, icon: Icon, active }) => (
                   <NavLink
                     key={to}

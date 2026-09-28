@@ -36,7 +36,8 @@ Smoke scripts: use curl cookie jars (`-c`/`-b`) after login. Do not expect `acce
 |------------|--------|-------|----------|
 | Read products | yes — **`cost` omitted** | yes — includes `cost` | **403** |
 | Create/update/delete products + upload | **403** | yes (upload rate-limited) | **403** |
-| Sales, customers/CxC, deliveries, kiosk staff, historial, dashboard | yes | yes | **403** |
+| Sales, customers/CxC, deliveries, kiosk staff, historial | yes | yes | **403** |
+| `GET /api/dashboard/summary` | **403** | yes | **403** |
 | `GET`/`PATCH` `/api/despacho` (F10) | **403** | yes | yes |
 | `GET /api/settings` | yes | yes | **403** |
 | `PUT`/`PATCH /api/settings` | **403** | yes (rate-limited) | **403** |
@@ -222,7 +223,7 @@ Auth: same as products — **Bearer** or cookie `access_token` via `get_current_
 | `lines[].product_id` | string | existing product id |
 | `lines[].qty` | number | `> 0` |
 | `lines[].price` | number | `>= 0` (unit price; backend computes totals) |
-| `payment_method` | string | `"cash"` \| `"card"` |
+| `payment_method` | string | `"cash"` \| `"card"` \| `"transfer"` |
 | `amount_paid` | number | `>= 0` |
 | `customer_id` | string \| null | **Required** when `amount_paid < total` (crédito). Optional when paid. Customer must exist and be `active`. |
 | `delivery_driver_id` | string \| null | Optional (F5). Id of repartidor in `/api/deliveries`. Must exist and be `active` when set. |
@@ -369,7 +370,7 @@ Auth: same — **Bearer** or cookie `access_token` via `get_current_user`.
 | Field | Rules |
 |-------|-------|
 | `amount` | `> 0`; **400** if `amount > customer.balance` (no overpay) |
-| `payment_method` | `"cash"` \| `"card"` |
+| `payment_method` | `"cash"` \| `"card"` \| `"transfer"` |
 | `note` | optional string \| null |
 
 Behavior:
@@ -837,7 +838,7 @@ Timezone: **America/Mexico_City** (calendar days → UTC windows on `sales.creat
 
 ## `GET /api/dashboard/summary`
 
-Auth: JWT.
+Auth: JWT admin only (`cajero`/`despacho` → **403**).
 
 Query:
 - `from`, `to` — `YYYY-MM-DD` CDMX days, inclusive. Defaults: `from` = 1st day of CDMX month of `to`; `to` = today CDMX.
@@ -904,7 +905,7 @@ Auth: JWT (`get_current_user`).
 | `from` | `YYYY-MM-DD` CDMX day → UTC start of that day on `created_at` |
 | `to` | `YYYY-MM-DD` CDMX day → UTC end of that day on `created_at` |
 | `payment_status` | `paid|partial` |
-| `payment_method` | `cash|card` |
+| `payment_method` | `cash|card|transfer` |
 | `customer_id` | ObjectId string |
 | `delivery_status` | `pending|assigned|out|delivered|cancelled` (F5) |
 | `delivery_driver_id` | ObjectId string (F5) |

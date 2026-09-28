@@ -243,7 +243,11 @@ export default function CustomerDetail() {
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-display text-lg">{formatMoney(p.amount)}</span>
                         <Badge className="bg-sky normal-case tracking-normal">
-                          {p.payment_method === 'card' ? 'Tarjeta' : 'Efectivo'}
+                          {p.payment_method === 'card'
+                            ? 'Tarjeta'
+                            : p.payment_method === 'transfer'
+                              ? 'Transferencia'
+                              : 'Efectivo'}
                         </Badge>
                       </div>
                       <p className="text-[11px] text-ink/40">{formatDate(p.created_at)}</p>

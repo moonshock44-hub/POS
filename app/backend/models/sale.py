@@ -4,6 +4,8 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from .base import PaymentMethod
+
 DeliveryStatus = Literal["pending", "assigned", "out", "delivered", "cancelled"]
 
 
@@ -15,7 +17,7 @@ class SaleLineIn(BaseModel):
 
 class SaleCreate(BaseModel):
     lines: List[SaleLineIn] = Field(min_length=1)
-    payment_method: Literal["cash", "card"]
+    payment_method: PaymentMethod
     amount_paid: float = Field(ge=0)
     customer_id: Optional[str] = None
     delivery_driver_id: Optional[str] = None
@@ -49,7 +51,7 @@ class SalePublic(BaseModel):
     id: str
     lines: List[SaleLinePublic]
     total: float
-    payment_method: Literal["cash", "card"]
+    payment_method: PaymentMethod
     amount_paid: float
     amount_due: float
     payment_status: Literal["paid", "partial"]

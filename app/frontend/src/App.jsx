@@ -31,6 +31,20 @@ function ProtectedRoute({ children }) {
   return children
 }
 
+/** Dashboard is admin-only. Cajero/despacho → /. */
+function AdminOnlyRoute({ children }) {
+  const { user, loading } = useAuth()
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center font-display text-2xl">
+        Cargando…
+      </div>
+    )
+  }
+  if (user?.role === 'admin') return children
+  return <Navigate to="/" replace />
+}
+
 /** F10: /despacho only for admin|despacho. Cajero (and others) → /. */
 function DespachoRoute({ children }) {
   const { user, loading } = useAuth()
@@ -87,7 +101,9 @@ export default function App() {
               path="/dashboard"
               element={
                 <DespachoOnlyGuard>
-                  <Dashboard />
+                  <AdminOnlyRoute>
+                    <Dashboard />
+                  </AdminOnlyRoute>
                 </DespachoOnlyGuard>
               }
             />

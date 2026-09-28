@@ -4,6 +4,7 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from .base import PaymentMethod
 from .sale import SalePublic
 
 
@@ -53,7 +54,7 @@ class CustomerPublic(BaseModel):
 
 class PaymentCreate(BaseModel):
     amount: float = Field(gt=0)
-    payment_method: Literal["cash", "card"]
+    payment_method: PaymentMethod
     note: Optional[str] = None
 
 
@@ -68,7 +69,7 @@ class PaymentPublic(BaseModel):
     id: str
     customer_id: str
     amount: float
-    payment_method: Literal["cash", "card"]
+    payment_method: PaymentMethod
     note: Optional[str] = None
     applied_to: List[PaymentApplied]
     balance_after: float

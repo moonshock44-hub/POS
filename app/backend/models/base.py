@@ -1,10 +1,12 @@
 """Shared Pydantic/Mongo helpers — never expose raw bson.ObjectId in JSON."""
 from datetime import datetime, timezone
-from typing import Annotated, Any, Optional
+from typing import Annotated, Any, Literal, Optional
 
 from bson import ObjectId
 from pydantic import BaseModel, ConfigDict, Field, GetCoreSchemaHandler
 from pydantic_core import core_schema
+
+PaymentMethod = Literal["cash", "card", "transfer"]
 
 
 class PyObjectId(ObjectId):

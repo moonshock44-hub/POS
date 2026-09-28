@@ -113,7 +113,7 @@ async def list_sales(
         query["payment_status"] = payment_status
 
     if payment_method is not None and payment_method != "":
-        allowed_pm = {"cash", "card"}
+        allowed_pm = {"cash", "card", "transfer"}
         if payment_method not in allowed_pm:
             raise HTTPException(status_code=400, detail="payment_method inválido")
         query["payment_method"] = payment_method

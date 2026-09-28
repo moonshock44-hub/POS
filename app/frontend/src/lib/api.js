@@ -138,7 +138,7 @@ export const productsApi = {
  * POST /api/customers — { name, phone, email?, notes?, active? }
  * GET /api/customers/{id}/account → { customer, open_sales, payments }
  *   (aliases sales/abonos accepted if present)
- * POST /api/customers/{id}/payments — { amount, payment_method: cash|card, note? }
+ * POST /api/customers/{id}/payments — { amount, payment_method: cash|card|transfer, note? }
  *   → PaymentPublic: { id, customer_id, amount, payment_method, note, applied_to, balance_after, … }
  */
 export const customersApi = {
@@ -162,7 +162,7 @@ export const customersApi = {
  *   optional delivery_driver_id + delivery_status (pending|assigned|out|delivered|cancelled)
  * GET /api/sales — list SalePublic[] (newest first). Query (all optional):
  *   from, to — YYYY-MM-DD (America/Mexico_City days, inclusive)
- *   payment_method — cash|card
+ *   payment_method — cash|card|transfer
  *   payment_status — paid|partial
  *   customer_id
  *   delivery_status, delivery_driver_id, with_delivery=true (F5)
@@ -243,7 +243,7 @@ export const salesApi = {
  * GET /api/kiosk/orders?status=pending — auth:true → KioskOrderPublic[]
  * GET /api/kiosk/orders/pending/count — auth:true → { count }
  * POST /api/kiosk/orders/{id}/fulfill — auth:true
- *   body: { payment_method: cash|card, amount_paid, customer_id? }
+ *   body: { payment_method: cash|card|transfer, amount_paid, customer_id? }
  *   → { order, sale }  (creates sale + decrements stock; NOT raw POST /api/sales)
  * Catalog for public kiosk: GET /api/kiosk/products auth:false (active only, no cost)
  */

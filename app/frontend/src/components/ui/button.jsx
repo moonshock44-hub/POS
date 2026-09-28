@@ -11,6 +11,7 @@ const buttonVariants = cva(
         primary: 'bg-coral text-ink hover:bg-[#ff7a68]',
         mint: 'bg-mint text-ink hover:bg-[#9ee8d8]',
         lemon: 'bg-lemon text-ink hover:bg-[#ffd93d]',
+        sky: 'bg-sky text-ink hover:bg-[#7cc9ff]',
         outline: 'bg-cream text-ink hover:bg-white',
         ghost: 'bg-transparent border-transparent shadow-none hover:bg-white/50',
       },
