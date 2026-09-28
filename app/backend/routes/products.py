@@ -1,4 +1,5 @@
 """Products CRUD + image upload — reads: any auth; mutations/upload: admin only (JUA-17)."""
+import secrets
 from datetime import datetime, timezone
 from typing import Annotated, List, Optional
 
@@ -26,6 +27,15 @@ def _oid(id_str: str) -> ObjectId:
 
 def _include_cost(user: dict) -> bool:
     return user.get("role") == "admin"
+
+
+async def _generate_sku(db) -> str:
+    """Short unique SKU for products created without one."""
+    for _ in range(5):
+        candidate = f"SKU-{secrets.token_hex(4).upper()}"
+        if not await db.products.find_one({"sku": candidate}):
+            return candidate
+    raise HTTPException(status_code=500, detail="No se pudo generar un SKU único")
 
 
 @router.get("", response_model=List[ProductPublic], response_model_exclude_none=True)
@@ -86,10 +96,13 @@ async def create_product(
     _admin=Depends(require_admin),
 ):
     db = get_db(request)
-    sku = body.sku.strip()
-    existing = await db.products.find_one({"sku": sku})
-    if existing:
-        raise HTTPException(status_code=400, detail="SKU ya existe")
+    sku = (body.sku or "").strip()
+    if not sku:
+        sku = await _generate_sku(db)
+    else:
+        existing = await db.products.find_one({"sku": sku})
+        if existing:
+            raise HTTPException(status_code=400, detail="SKU ya existe")
 
     now = datetime.now(timezone.utc)
     doc = {
@@ -123,10 +136,13 @@ async def update_product(
     if not existing:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
 
-    sku = body.sku.strip()
-    dup = await db.products.find_one({"sku": sku, "_id": {"$ne": oid}})
-    if dup:
-        raise HTTPException(status_code=400, detail="SKU ya existe")
+    sku = (body.sku or "").strip()
+    if not sku:
+        sku = await _generate_sku(db)
+    else:
+        dup = await db.products.find_one({"sku": sku, "_id": {"$ne": oid}})
+        if dup:
+            raise HTTPException(status_code=400, detail="SKU ya existe")
 
     now = datetime.now(timezone.utc)
     update = {

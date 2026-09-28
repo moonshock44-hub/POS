@@ -182,7 +182,7 @@ export default function ProductDialog({ open, product, onClose, onSaved }) {
                 id="prod-sku"
                 value={form.sku}
                 onChange={setField('sku')}
-                placeholder="SKU-001"
+                placeholder="Automático si lo dejas vacío"
               />
             </div>
             <div className="space-y-2">

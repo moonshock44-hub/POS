@@ -21,7 +21,7 @@ class ProductInDB(BaseDocument):
 
 class ProductCreate(BaseModel):
     name: str = Field(min_length=1)
-    sku: str = Field(min_length=1)
+    sku: Optional[str] = None  # blank/omitted → server auto-generates
     category: str = Field(min_length=1)
     unit: str = Field(min_length=1)
     stock: float = 0
@@ -33,7 +33,7 @@ class ProductCreate(BaseModel):
 
 class ProductUpdate(BaseModel):
     name: str = Field(min_length=1)
-    sku: str = Field(min_length=1)
+    sku: Optional[str] = None  # blank/omitted → server auto-generates
     category: str = Field(min_length=1)
     unit: str = Field(min_length=1)
     stock: float = 0

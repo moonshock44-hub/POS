@@ -102,7 +102,7 @@ Exceeded → **429** `{ "detail": "Demasiados intentos..." }`.
 |-------|------|-------|
 | `id` | string | PyObjectId → str (never raw ObjectId) |
 | `name` | string | |
-| `sku` | string | unique |
+| `sku` | string | unique; blank/omitted on create or update → server auto-generates `SKU-XXXXXXXX` |
 | `category` | string | |
 | `unit` | string | e.g. `pza`, `kg`, `lt` |
 | `stock` | number | |
@@ -134,6 +134,7 @@ Exceeded → **429** `{ "detail": "Demasiados intentos..." }`.
 ```
 
 - `active` optional on create (default `true`)
+- `sku` optional/blank on create or PUT — server auto-generates `SKU-XXXXXXXX` when omitted
 - Full update on PUT (all fields expected)
 - Typical flow: `POST /api/products/upload` → take `image_url` → pass in create/update JSON
 
